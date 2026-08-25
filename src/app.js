@@ -10,29 +10,21 @@ const { search }     = require('./controller/music.controller');
 dotenv.config();
 const app = express();
 
-const allowedOrigins = (
-  process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173'
-)
+// Set default fallback domains
+const defaultOrigins = [
+  'https://soundpulse-web.vercel.app',
+  'http://localhost:5173'
+];
+
+// Read from Render env variables if present, otherwise merge defaults
+const envOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-// ✅ CORS — allows frontend to communicate with backend
-const express = require('express');
-const cors = require('cors');
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
-const app = express();
-
-// Parse origins from process.env or fallback to defaults
-const allowedOrigins = process.env.CLIENT_URLS 
-  ? process.env.CLIENT_URLS.split(',').map(url => url.trim())
-  : [
-     'https://soundpulse-web.vercel.app',
-     'http://localhost:5173'
-
-     
-    ];
-
+// CORS Middleware
 app.use(cors({
   origin(origin, callback) {
     // Allow non-browser requests (Postman, curl, server-to-server)
@@ -41,25 +33,27 @@ app.use(cors({
     }
     return callback(new Error(`CORS policy violation: ${origin} is not allowed`));
   },
-  credentials: true, // Required for cookies and auth headers
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Defensive: express.json()/urlencoded() only populate req.body when the
-// request actually has a matching Content-Type header. A client that omits
-// it (or sends a bad one) would otherwise leave req.body `undefined` and
-// crash any controller that destructures it — normalize to {} instead.
-app.use((req, res, next) => { if (req.body === undefined) req.body = {}; next(); });
+
+// Normalize empty req.body to prevent crashes
+app.use((req, res, next) => { 
+  if (req.body === undefined) req.body = {}; 
+  next(); 
+});
+
 app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/music', musicRoutes);
 app.use('/api/playlists', playlistRoutes);
-app.get('/api/search', search); // alias of GET /api/music/search, matches spec's top-level search route
+app.get('/api/search', search);
 
 // Health check
 app.get('/api/health', (req, res) => {
