@@ -27,7 +27,8 @@ const app = express();
 const allowedOrigins = process.env.CLIENT_URLS 
   ? process.env.CLIENT_URLS.split(',').map(url => url.trim())
   : [
-      'https://soundpulse-web.vercel.app'
+     'https://soundpulse-web.vercel.app',
+     'http://localhost:5173'
 
      
     ];
