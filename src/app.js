@@ -18,14 +18,29 @@ const allowedOrigins = (
   .filter(Boolean);
 
 // ✅ CORS — allows frontend to communicate with backend
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
+
+// Parse origins from process.env or fallback to defaults
+const allowedOrigins = process.env.CLIENT_URLS 
+  ? process.env.CLIENT_URLS.split(',').map(url => url.trim())
+  : [
+      'https://soundpulse-web.vercel.app'
+
+     
+    ];
+
 app.use(cors({
   origin(origin, callback) {
-    // Allow server-to-server and same-origin tools that send no Origin header.
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(null, false);
+    // Allow non-browser requests (Postman, curl, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS policy violation: ${origin} is not allowed`));
   },
-  credentials: true, // Required for cookies
+  credentials: true, // Required for cookies and auth headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
