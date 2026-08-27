@@ -32,6 +32,7 @@ router.post('/album/:albumId/tracks', authartist, music.addMusicToAlbum);
 router.put('/album/:albumId', authartist, music.updateAlbum);
 router.delete('/album/:albumId', authartist, music.deleteAlbum);
 router.delete('/album/:albumId/tracks/:musicId', authartist, music.removeMusicFromAlbum);
+router.delete('/:musicId', authartist, music.deleteMusic);
 router.put('/:musicId', authartist, music.updateMusic);
 router.post('/upload-image', authuser, upload.single('image'), music.uploadImage);
 

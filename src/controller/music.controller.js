@@ -175,6 +175,22 @@ async function updateMusic(req, res) {
   }
 }
 
+async function deleteMusic(req, res) {
+  try {
+    const music = await musicModel.findOne({ _id: req.params.musicId, artist: req.user.id });
+    if (!music) return res.status(404).json({ message: 'Track not found' });
+
+    await Promise.all([
+      music.deleteOne(),
+      albumModel.updateMany({ artist: req.user.id }, { $pull: { musics: music._id } }),
+      userModel.updateMany({}, { $pull: { likedSongs: music._id, 'recentlyPlayed.track': music._id } }),
+    ]);
+    return res.json({ message: 'Track deleted' });
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 async function uploadImage(req, res) {
   try {
     const file = req.file;
@@ -294,6 +310,6 @@ async function search(req, res) {
 
 module.exports = {
   Createmusic, createalbum, getmusic, getalbum, getalbumbyid, getMyAlbums, addMusicToAlbum, updateAlbum, deleteAlbum,
-  removeMusicFromAlbum, updateMusic, uploadImage,
+  removeMusicFromAlbum, updateMusic, deleteMusic, uploadImage,
   likeMusic, incrementPlay, getLikedSongs, getRecentlyPlayed, search,
 };
