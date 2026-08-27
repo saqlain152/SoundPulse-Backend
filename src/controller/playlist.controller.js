@@ -68,10 +68,11 @@ async function updatePlaylist(req, res) {
       return res.status(403).json({ message: 'You can only edit your own playlists' });
     }
 
-    const { name, description, isPublic } = req.body;
+    const { name, description, isPublic, coverImage } = req.body;
     if (name !== undefined) playlist.name = name.trim();
     if (description !== undefined) playlist.description = description;
     if (isPublic !== undefined) playlist.isPublic = isPublic;
+    if (coverImage !== undefined) playlist.coverImage = coverImage.trim();
     await playlist.save();
 
     res.json({ message: 'Playlist updated', playlist });
